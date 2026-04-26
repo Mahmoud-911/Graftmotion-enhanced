@@ -84,7 +84,8 @@ async function getContent(): Promise<SiteContent> {
       .eq("id", "main")
       .single();
 
-    console.log("CONTENT FROM SUPABASE:", data?.data);
+    console.log("CONTENT FROM SUPABASE:", JSON.stringify(data?.data)?.slice(0, 300));
+    console.log("HERO VIDEO URL (supabase):", data?.data?.hero?.videoUrl);
 
     if (!error && data?.data) {
       return shapeContent(data.data);
@@ -101,12 +102,15 @@ async function getContent(): Promise<SiteContent> {
       path.join(process.cwd(), "data", "content.json"),
       "utf-8"
     );
-    return shapeContent(JSON.parse(raw));
+    const local = JSON.parse(raw);
+    console.log("Using content.json fallback. Hero URL:", local?.hero?.videoUrl);
+    return shapeContent(local);
   } catch {
     // fall through
   }
 
   // 3. Last resort hardcoded defaults
+  console.log("Using hardcoded FALLBACK — no Supabase data and no content.json");
   return FALLBACK;
 }
 
