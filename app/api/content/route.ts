@@ -1,11 +1,17 @@
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 import { readFile } from 'fs/promises'
 import path from 'path'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Instantiated inside request handlers only — never at build time.
+function getSupabase() {
+  return createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 const CONTENT_PATH = path.join(process.cwd(), 'data', 'content.json')
 
@@ -17,6 +23,8 @@ async function readLocalContent() {
 const NO_CACHE = { headers: { 'Cache-Control': 'no-store' } }
 
 export async function GET() {
+  const supabase = getSupabase()
+
   // 1. Try Supabase
   try {
     const { data, error } = await supabase
@@ -41,6 +49,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const supabase = getSupabase()
+
   try {
     const body = await req.json()
 
@@ -74,11 +84,11 @@ export async function POST(req: Request) {
     // Normalise featuredWork: accept array or slot-keyed object
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const normalizeFeatured = (fw: any) => {
-      if (!fw) return [];
-      if (Array.isArray(fw)) return fw;
-      return [fw.slot1 || {}, fw.slot2 || {}, fw.slot3 || {}, fw.slot4 || {}];
-    };
-    merged.featuredWork = normalizeFeatured(merged.featuredWork);
+      if (!fw) return []
+      if (Array.isArray(fw)) return fw
+      return [fw.slot1 || {}, fw.slot2 || {}, fw.slot3 || {}, fw.slot4 || {}]
+    }
+    merged.featuredWork = normalizeFeatured(merged.featuredWork)
 
     // 3. Save merged result
     const { error } = await supabase
