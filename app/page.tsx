@@ -1,7 +1,6 @@
-import { readFile } from "fs/promises";
-import path from "path";
 import WorkItem from "@/components/WorkItem";
 import FloatingIcons from "@/components/FloatingIcons";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -39,13 +38,35 @@ type SiteContent = {
   }>;
 };
 
+// Normalise a work item so WorkItem component always gets camelCase fields,
+// regardless of whether the stored data used snake_case or camelCase.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normaliseWorkItem(v: any) {
+  return {
+    ...v,
+    videoUrl:  v.videoUrl  || v.video_url  || "",
+    thumbnail: v.thumbnail || v.thumbnail_url || "",
+  };
+}
+
 async function getContent(): Promise<SiteContent> {
   try {
-    const raw = await readFile(
-      path.join(process.cwd(), "data", "content.json"),
-      "utf-8"
-    );
-    return JSON.parse(raw);
+    const { data, error } = await supabase
+      .from("content")
+      .select("data")
+      .eq("id", "main")
+      .single();
+
+    if (error || !data?.data) throw new Error("no content");
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const c = data.data as any;
+
+    return {
+      ...c,
+      featuredWork: (c.featuredWork || []).map(normaliseWorkItem),
+      moreWork:     (c.moreWork     || []).map(normaliseWorkItem),
+    };
   } catch {
     return {
       site: {
@@ -79,10 +100,15 @@ function Accent({ text, word }: { text: string; word: string }) {
 
 export default async function HomePage() {
   const c = await getContent();
-  const { site, hero, clients, featuredWork, testimonials, moreWork } = c;
+  const site         = c.site         ?? ({} as SiteContent["site"]);
+  const hero         = c.hero         ?? ({} as SiteContent["hero"]);
+  const clients      = c.clients      ?? [];
+  const featuredWork = c.featuredWork ?? [];
+  const testimonials = c.testimonials ?? ({ featuredImage: "", items: [] } as SiteContent["testimonials"]);
+  const moreWork     = c.moreWork     ?? [];
 
   // Determine which suffix of the brand title to highlight (e.g. "MOTION")
-  const motionWord = site.title.includes("MOTION") ? "MOTION" : "";
+  const motionWord = site?.title?.includes("MOTION") ? "MOTION" : "";
 
   return (
     <div className="min-h-screen">
@@ -95,14 +121,14 @@ export default async function HomePage() {
           style={{ color: "var(--text)", letterSpacing: "0.06em" }}
         >
           {motionWord
-            ? <Accent text={site.title} word={motionWord} />
-            : site.title}
+            ? <Accent text={site?.title || ""} word={motionWord} />
+            : site?.title || ""}
         </h1>
         <p
           className="mx-auto mt-3 max-w-lg text-base font-semibold md:text-lg"
           style={{ color: "var(--text-muted)" }}
         >
-          <Accent text={site.subtitle} word="Guaranteed" />
+          <Accent text={site?.subtitle || ""} word="Guaranteed" />
         </p>
 
         {/* Showreel */}
@@ -114,9 +140,9 @@ export default async function HomePage() {
             border: "1px solid var(--border)"
           }}
         >
-          {hero.videoUrl ? (
+          {hero?.videoUrl ? (
             <video
-              src={hero.videoUrl}
+              src={hero?.videoUrl || ""}
               autoPlay
               muted
               loop
@@ -133,8 +159,8 @@ export default async function HomePage() {
         </div>
 
         <div className="mt-8">
-          <a href={site.ctaUrl} target="_blank" rel="noreferrer" className="btn-primary text-base">
-            {site.ctaText}
+          <a href={site?.ctaUrl || ""} target="_blank" rel="noreferrer" className="btn-primary text-base">
+            {site?.ctaText || ""}
           </a>
         </div>
       </section>
@@ -192,8 +218,8 @@ export default async function HomePage() {
           ))}
         </div>
         <div className="mt-10 text-center">
-          <a href={site.ctaUrl} target="_blank" rel="noreferrer" className="btn-secondary">
-            {site.ctaText}
+          <a href={site?.ctaUrl || ""} target="_blank" rel="noreferrer" className="btn-secondary">
+            {site?.ctaText || ""}
           </a>
         </div>
       </section>
@@ -221,9 +247,9 @@ export default async function HomePage() {
             border: "1px solid var(--border)"
           }}
         >
-          {testimonials.featuredImage ? (
+          {testimonials?.featuredImage ? (
             <img
-              src={testimonials.featuredImage}
+              src={testimonials?.featuredImage || ""}
               alt="Client testimonials"
               className="w-full object-cover"
             />
@@ -240,9 +266,9 @@ export default async function HomePage() {
         </div>
 
         {/* Individual testimonial cards */}
-        {testimonials.items.filter((t) => t.quote || t.image).length > 0 && (
+        {(testimonials?.items || []).filter((t) => t.quote || t.image).length > 0 && (
           <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {testimonials.items
+            {(testimonials?.items || [])
               .filter((t) => t.quote || t.image)
               .map((t) => (
                 <div
@@ -321,19 +347,19 @@ export default async function HomePage() {
           <span className="text-accent-glow">TOGETHER</span>
         </h2>
         <div className="mt-8">
-          <a href={site.ctaUrl} target="_blank" rel="noreferrer" className="btn-secondary">
-            {site.ctaText}
+          <a href={site?.ctaUrl || ""} target="_blank" rel="noreferrer" className="btn-secondary">
+            {site?.ctaText || ""}
           </a>
         </div>
         <p className="mt-6 text-sm" style={{ color: "var(--text-muted)" }}>
           Or Email Me
         </p>
         <a
-          href={`mailto:${site.email}`}
+          href={`mailto:${site?.email || ""}`}
           className="mt-1 inline-block text-sm font-semibold transition-opacity hover:opacity-80"
           style={{ color: "var(--accent)" }}
         >
-          {site.email}
+          {site?.email || ""}
         </a>
       </section>
     </div>
