@@ -14,6 +14,8 @@ async function readLocalContent() {
   return JSON.parse(raw)
 }
 
+const NO_CACHE = { headers: { 'Cache-Control': 'no-store' } }
+
 export async function GET() {
   // 1. Try Supabase
   try {
@@ -24,7 +26,7 @@ export async function GET() {
       .single()
 
     if (!error && data?.data) {
-      return Response.json(data.data)
+      return Response.json(data.data, NO_CACHE)
     }
   } catch {
     // fall through
@@ -32,9 +34,9 @@ export async function GET() {
 
   // 2. Fall back to content.json (bundled with the deployment)
   try {
-    return Response.json(await readLocalContent())
+    return Response.json(await readLocalContent(), NO_CACHE)
   } catch {
-    return Response.json({}, { status: 200 })
+    return Response.json({}, { status: 200, ...NO_CACHE })
   }
 }
 
