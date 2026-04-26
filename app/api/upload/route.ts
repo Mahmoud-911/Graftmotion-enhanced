@@ -24,13 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (!file.type.includes("video") && !file.type.includes("image")) {
-      return NextResponse.json(
-        { error: `Unsupported type "${file.type}". Only images and videos are allowed.` },
-        { status: 400 }
-      );
-    }
-
+    // allow all file types — Cloudinary validates on its end
     if (file.size > MAX_BYTES) {
       return NextResponse.json(
         { error: `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max is 100 MB.` },
