@@ -107,13 +107,36 @@ function normalizeAdminContent(raw: unknown): Content {
 }
 
 /* ── Helpers ─────────────────────────────────────────────── */
+
+// Direct unsigned upload to Cloudinary — no backend involved.
+// Requires NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+// to be set in your environment (Netlify environment variables + .env.local).
 async function uploadFile(file: File): Promise<string> {
+  const cloudName   = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+  if (!cloudName || !uploadPreset) {
+    throw new Error(
+      "Missing NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME or NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET"
+    );
+  }
+
   const fd = new FormData();
   fd.append("file", file);
-  const res = await fetch("/api/upload", { method: "POST", body: fd });
-  if (!res.ok) throw new Error("Upload failed");
-  const { url } = await res.json();
-  return url;
+  fd.append("upload_preset", uploadPreset);
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+    { method: "POST", body: fd }
+  );
+
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({}));
+    throw new Error(errBody?.error?.message || `Cloudinary upload failed (${res.status})`);
+  }
+
+  const data = await res.json();
+  return data.secure_url as string;
 }
 
 /* ── Sub-components ──────────────────────────────────────── */
