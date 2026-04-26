@@ -1,46 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
-import { readFile, writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { createClient } from '@supabase/supabase-js';
 
-const CONTENT_PATH = path.join(process.cwd(), "data", "content.json");
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
+// ✅ GET (read data)
 export async function GET() {
   try {
-    const raw = await readFile(CONTENT_PATH, "utf-8");
-    return NextResponse.json(JSON.parse(raw));
-  } catch {
-    return NextResponse.json({ error: "Content not found" }, { status: 404 });
-  }
-}
+    const { data, error } = await supabase
+      .from('content')
+      .select('*')
+      .eq('id', 'main')
+      .single();
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+    if (error) {
+      return Response.json({ error: 'Failed to fetch' }, { status: 500 });
+    }
 
-    // Ensure data directory exists
-    await mkdir(path.dirname(CONTENT_PATH), { recursive: true });
-    await writeFile(CONTENT_PATH, JSON.stringify(body, null, 2), "utf-8");
-
-    return NextResponse.json({ success: true });
+    return Response.json(data?.data || {});
   } catch (err) {
-    console.error("Failed to save content:", err);
-    return NextResponse.json({ error: "Failed to save" }, { status: 500 });
+    return Response.json({ error: 'Server error' }, { status: 500 });
   }
 }
 
-/*
- * DEPLOYMENT NOTE
- * ────────────────────────────────────────────────────────────────
- * Local dev: reads/writes data/content.json via the Node.js fs module.
- *
- * When you deploy (Vercel, Railway, etc.) the file system is ephemeral,
- * so swap these implementations:
- *
- *   GET  → query your database (MongoDB, Supabase, PlanetScale, etc.)
- *   POST → upsert a document / row in that database
- *
- * A minimal Supabase swap looks like:
- *   const { data } = await supabase.from('content').select('*').single()
- *   await supabase.from('content').upsert({ id: 1, ...body })
- * ────────────────────────────────────────────────────────────────
- */
+// ✅ POST (save data)
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+
+    const { error } = await supabase
+      .from('content')
+      .upsert({
+        id: 'main',
+        data: body,
+      });
+
+    if (error) {
+      return Response.json({ error: 'Failed to save' }, { status: 500 });
+    }
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json({ error: 'Server error' }, { status: 500 });
+  }
+}
