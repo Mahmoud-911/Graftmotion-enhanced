@@ -31,6 +31,14 @@ type Content = {
 const ADMIN_PASSWORD =
   process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "graftmotion";
 
+/* ── Ensure an array always has at least `count` slots ─────────── */
+function ensureArraySlots<T>(arr: unknown, count: number, factory: () => T): T[] {
+  if (!Array.isArray(arr) || arr.length === 0) {
+    return Array.from({ length: count }, factory);
+  }
+  return arr as T[];
+}
+
 /* ── Normalise raw Supabase blob into a fully-typed Content object ── */
 function normalizeContent(raw: unknown): Content {
   const c = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
@@ -69,6 +77,34 @@ const TABS = [
 ] as const;
 
 type Tab = (typeof TABS)[number]["id"];
+
+/* ── Apply normalizeContent then guarantee UI slots ────────────── */
+function normalizeAdminContent(raw: unknown): Content {
+  const c = normalizeContent(raw);
+  return {
+    ...c,
+    hero: c.hero || { videoUrl: "" },
+    clients: ensureArraySlots(
+      c.clients, 4,
+      () => ({ id: uuid(), name: "", logo: "" })
+    ),
+    featuredWork: ensureArraySlots(
+      c.featuredWork, 4,
+      () => ({ id: uuid(), title: "", thumbnail: "", videoUrl: "" })
+    ),
+    testimonials: {
+      featuredImage: c.testimonials?.featuredImage || "",
+      items: ensureArraySlots(
+        c.testimonials?.items, 3,
+        () => ({ id: uuid(), clientName: "", role: "", image: "", quote: "" })
+      ),
+    },
+    moreWork: ensureArraySlots(
+      c.moreWork, 6,
+      () => ({ id: uuid(), title: "", thumbnail: "", videoUrl: "" })
+    ),
+  };
+}
 
 /* ── Helpers ─────────────────────────────────────────────── */
 async function uploadFile(file: File): Promise<string> {
@@ -864,7 +900,7 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/content");
       const raw = await res.json();
-      setContent(normalizeContent(raw));
+      setContent(normalizeAdminContent(raw));
     } catch {
       showToast("Failed to load content", false);
     } finally {

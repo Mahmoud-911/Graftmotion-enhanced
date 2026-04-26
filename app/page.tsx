@@ -1,3 +1,5 @@
+import { readFile } from "fs/promises";
+import path from "path";
 import WorkItem from "@/components/WorkItem";
 import FloatingIcons from "@/components/FloatingIcons";
 import { supabase } from "@/lib/supabase";
@@ -49,7 +51,32 @@ function normaliseWorkItem(v: any) {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function shapeContent(c: any): SiteContent {
+  return {
+    ...c,
+    featuredWork: (c.featuredWork || []).map(normaliseWorkItem),
+    moreWork:     (c.moreWork     || []).map(normaliseWorkItem),
+  };
+}
+
+const FALLBACK: SiteContent = {
+  site: {
+    title: "GRAFTMOTION",
+    subtitle: "Reliable Direction-aligned Videos. Guaranteed.",
+    email: "graftmotionfx@gmail.com",
+    ctaText: "Work With ME",
+    ctaUrl: "https://www.instagram.com/graftmotion.vfx/"
+  },
+  hero: { videoUrl: "" },
+  clients: [],
+  featuredWork: [],
+  testimonials: { featuredImage: "", items: [] },
+  moreWork: []
+};
+
 async function getContent(): Promise<SiteContent> {
+  // 1. Try Supabase (live data updated via admin)
   try {
     const { data, error } = await supabase
       .from("content")
@@ -57,32 +84,30 @@ async function getContent(): Promise<SiteContent> {
       .eq("id", "main")
       .single();
 
-    if (error || !data?.data) throw new Error("no content");
+    console.log("CONTENT FROM SUPABASE:", data?.data);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const c = data.data as any;
+    if (!error && data?.data) {
+      return shapeContent(data.data);
+    }
 
-    return {
-      ...c,
-      featuredWork: (c.featuredWork || []).map(normaliseWorkItem),
-      moreWork:     (c.moreWork     || []).map(normaliseWorkItem),
-    };
-  } catch {
-    return {
-      site: {
-        title: "GRAFTMOTION",
-        subtitle: "Reliable Direction-aligned Videos. Guaranteed.",
-        email: "graftmotionfx@gmail.com",
-        ctaText: "Work With ME",
-        ctaUrl: "https://www.instagram.com/graftmotion.vfx/"
-      },
-      hero: { videoUrl: "" },
-      clients: [],
-      featuredWork: [],
-      testimonials: { featuredImage: "", items: [] },
-      moreWork: []
-    };
+    console.error("Supabase content error:", error);
+  } catch (err) {
+    console.error("Supabase fetch threw:", err);
   }
+
+  // 2. Fall back to content.json (bundled, always has real content)
+  try {
+    const raw = await readFile(
+      path.join(process.cwd(), "data", "content.json"),
+      "utf-8"
+    );
+    return shapeContent(JSON.parse(raw));
+  } catch {
+    // fall through
+  }
+
+  // 3. Last resort hardcoded defaults
+  return FALLBACK;
 }
 
 /** Wraps `word` in an orange glow span within `text`. Falls back to plain text. */
