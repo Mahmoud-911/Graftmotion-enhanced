@@ -51,9 +51,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Buffer the file — can throw if the file is too large for available memory
+  let bytes: Uint8Array;
   try {
-    const bytes = new Uint8Array(await blob.arrayBuffer());
+    bytes = new Uint8Array(await blob.arrayBuffer());
+    console.log("Buffered bytes:", bytes.byteLength);
+  } catch (err) {
+    console.error("BUFFER ERROR:", err);
+    return NextResponse.json({ error: "Failed to read file into memory" }, { status: 500 });
+  }
 
+  // Stream to Cloudinary
+  try {
     const result = await new Promise<UploadApiResponse>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
@@ -75,15 +84,15 @@ export async function POST(request: NextRequest) {
     console.log("Upload successful:", result.secure_url);
 
     return NextResponse.json({
-      url:         result.secure_url,
-      secure_url:  result.secure_url,
-      public_id:   result.public_id,
-      duration:    result.duration ?? null,
+      url:        result.secure_url,
+      secure_url: result.secure_url,
+      public_id:  result.public_id,
+      duration:   result.duration ?? null,
     });
   } catch (err) {
-    console.error("UPLOAD ERROR:", err);
+    console.error("CLOUDINARY ERROR:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Upload failed" },
+      { error: err instanceof Error ? err.message : "Cloudinary upload failed" },
       { status: 500 }
     );
   }
