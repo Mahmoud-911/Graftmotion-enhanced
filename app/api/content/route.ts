@@ -1,79 +1,50 @@
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-import { readFile } from 'fs/promises'
+import { readFile, writeFile, mkdir } from 'fs/promises'
 import path from 'path'
-import { createClient } from '@supabase/supabase-js'
-
-// Instantiated inside request handlers only — never at build time.
-function getSupabase() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
 
 const CONTENT_PATH = path.join(process.cwd(), 'data', 'content.json')
 
-async function readLocalContent() {
+const NO_CACHE = { headers: { 'Cache-Control': 'no-store' } }
+
+async function readContent() {
   const raw = await readFile(CONTENT_PATH, 'utf-8')
   return JSON.parse(raw)
 }
 
-const NO_CACHE = { headers: { 'Cache-Control': 'no-store' } }
-
 export async function GET() {
-  const supabase = getSupabase()
-
-  // 1. Try Supabase
   try {
-    const { data, error } = await supabase
-      .from('content')
-      .select('data')
-      .eq('id', 'main')
-      .single()
-
-    if (!error && data?.data) {
-      return Response.json(data.data, NO_CACHE)
-    }
-  } catch {
-    // fall through
-  }
-
-  // 2. Fall back to content.json (bundled with the deployment)
-  try {
-    return Response.json(await readLocalContent(), NO_CACHE)
+    return Response.json(await readContent(), NO_CACHE)
   } catch {
     return Response.json({}, { status: 200, ...NO_CACHE })
   }
 }
 
 export async function POST(req: Request) {
-  const supabase = getSupabase()
-
   try {
     const body = await req.json()
 
-    // 1. Get existing content so we can merge, not overwrite
-    const { data: existing } = await supabase
-      .from('content')
-      .select('data')
-      .eq('id', 'main')
-      .single()
+    // Read existing data for deep merge
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let existingData: Record<string, any> = {}
+    try {
+      existingData = await readContent()
+    } catch {
+      // file may not exist yet — start fresh
+    }
 
-    const existingData = existing?.data || {}
-
-    // 2. Deep merge — top-level spread, with nested objects preserved
+    // Deep merge — preserve nested objects
     const merged = {
       ...existingData,
       ...body,
       hero: {
-        ...existingData.hero,
-        ...body.hero,
+        ...(existingData.hero || {}),
+        ...(body.hero || {}),
       },
       testimonials: {
-        ...existingData.testimonials,
-        ...body.testimonials,
+        ...(existingData.testimonials || {}),
+        ...(body.testimonials || {}),
         items:
           body.testimonials?.items ||
           existingData.testimonials?.items ||
@@ -90,17 +61,12 @@ export async function POST(req: Request) {
     }
     merged.featuredWork = normalizeFeatured(merged.featuredWork)
 
-    // 3. Save merged result
-    const { error } = await supabase
-      .from('content')
-      .upsert({ id: 'main', data: merged })
-
-    if (error) {
-      return Response.json({ error: 'Save failed' }, { status: 500 })
-    }
+    await mkdir(path.dirname(CONTENT_PATH), { recursive: true })
+    await writeFile(CONTENT_PATH, JSON.stringify(merged, null, 2), 'utf-8')
 
     return Response.json({ success: true })
   } catch (err) {
+    console.error('Content save error:', err)
     return Response.json({ error: 'Server error' }, { status: 500 })
   }
 }

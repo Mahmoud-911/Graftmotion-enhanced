@@ -54,12 +54,34 @@
       "id": "fw4",
       "title": "Discord Promo",
       "thumbnail": "/uploads/1777210721960-screenshot-2026-04-26-143826.png",
-      "videoUrl": "/uploads/1777210709774-discord-promo.mp4"
+      "videoUrl": "https://res.cloudinary.com/db0ncejzp/video/upload/v1777246942/h9njtlzrqvznbxjf0luw.mp4"
     }
   ],
   "testimonials": {
     "featuredImage": "/uploads/1777175042840-testomonials.jpg",
-    "items": []
+    "items": [
+      {
+        "id": "f3686249-4c01-434c-baa2-87f3551caf68",
+        "clientName": "",
+        "role": "",
+        "image": "",
+        "quote": ""
+      },
+      {
+        "id": "2d3ff64d-6eed-488a-9994-82ed733e1ab4",
+        "clientName": "",
+        "role": "",
+        "image": "",
+        "quote": ""
+      },
+      {
+        "id": "fda6f787-6e48-4ce2-9482-bb31bf781fbf",
+        "clientName": "",
+        "role": "",
+        "image": "",
+        "quote": ""
+      }
+    ]
   },
   "moreWork": [
     {

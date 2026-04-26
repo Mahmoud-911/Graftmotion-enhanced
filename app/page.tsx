@@ -2,7 +2,6 @@ import { readFile } from "fs/promises";
 import path from "path";
 import WorkItem from "@/components/WorkItem";
 import FloatingIcons from "@/components/FloatingIcons";
-import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -76,41 +75,18 @@ const FALLBACK: SiteContent = {
 };
 
 async function getContent(): Promise<SiteContent> {
-  // 1. Try Supabase (live data updated via admin)
-  try {
-    const { data, error } = await supabase
-      .from("content")
-      .select("data")
-      .eq("id", "main")
-      .single();
-
-    console.log("CONTENT FROM SUPABASE:", JSON.stringify(data?.data)?.slice(0, 300));
-    console.log("HERO VIDEO URL (supabase):", data?.data?.hero?.videoUrl);
-
-    if (!error && data?.data) {
-      return shapeContent(data.data);
-    }
-
-    console.error("Supabase content error:", error);
-  } catch (err) {
-    console.error("Supabase fetch threw:", err);
-  }
-
-  // 2. Fall back to content.json (bundled, always has real content)
+  // 1. Read from content.json (source of truth)
   try {
     const raw = await readFile(
       path.join(process.cwd(), "data", "content.json"),
       "utf-8"
     );
-    const local = JSON.parse(raw);
-    console.log("Using content.json fallback. Hero URL:", local?.hero?.videoUrl);
-    return shapeContent(local);
+    return shapeContent(JSON.parse(raw));
   } catch {
     // fall through
   }
 
-  // 3. Last resort hardcoded defaults
-  console.log("Using hardcoded FALLBACK — no Supabase data and no content.json");
+  // 2. Last resort hardcoded defaults
   return FALLBACK;
 }
 
