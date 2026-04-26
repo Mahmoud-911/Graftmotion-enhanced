@@ -31,6 +31,34 @@ type Content = {
 const ADMIN_PASSWORD =
   process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "graftmotion";
 
+/* ── Normalise raw Supabase blob into a fully-typed Content object ── */
+function normalizeContent(raw: unknown): Content {
+  const c = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const site = (c.site && typeof c.site === "object" ? c.site : {}) as Record<string, unknown>;
+  const hero = (c.hero && typeof c.hero === "object" ? c.hero : {}) as Record<string, unknown>;
+  const tRaw = (c.testimonials && typeof c.testimonials === "object" ? c.testimonials : {}) as Record<string, unknown>;
+
+  return {
+    site: {
+      title:    (site.title    as string) || "",
+      subtitle: (site.subtitle as string) || "",
+      email:    (site.email    as string) || "",
+      ctaText:  (site.ctaText  as string) || "",
+      ctaUrl:   (site.ctaUrl   as string) || "",
+    },
+    hero: {
+      videoUrl: (hero.videoUrl as string) || "",
+    },
+    clients:      Array.isArray(c.clients)      ? (c.clients      as Client[])          : [],
+    featuredWork: Array.isArray(c.featuredWork) ? (c.featuredWork as WorkItem[])        : [],
+    moreWork:     Array.isArray(c.moreWork)     ? (c.moreWork     as WorkItem[])        : [],
+    testimonials: {
+      featuredImage: (tRaw.featuredImage as string) || "",
+      items:          Array.isArray(tRaw.items) ? (tRaw.items as TestimonialItem[]) : [],
+    },
+  };
+}
+
 const TABS = [
   { id: "hero", label: "Showreel" },
   { id: "clients", label: "Clients" },
@@ -241,17 +269,17 @@ function HeroTab({
           accept="video/mp4,video/webm,video/quicktime"
           currentUrl={content.hero.videoUrl}
           onUploaded={(url) =>
-            setContent({ ...content, hero: { videoUrl: url } })
+            setContent({ ...content, hero: { ...(content?.hero || {}), videoUrl: url } })
           }
           uploading={uploading}
           setUploading={setUploading}
         />
-        {content.hero.videoUrl && (
+        {content?.hero?.videoUrl && (
           <button
             className="mt-3 text-xs hover:underline"
             style={{ color: "var(--text-muted)" }}
             onClick={() =>
-              setContent({ ...content, hero: { videoUrl: "" } })
+              setContent({ ...content, hero: { ...(content?.hero || {}), videoUrl: "" } })
             }
           >
             Remove video
@@ -835,7 +863,8 @@ export default function AdminPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/content");
-      setContent(await res.json());
+      const raw = await res.json();
+      setContent(normalizeContent(raw));
     } catch {
       showToast("Failed to load content", false);
     } finally {
