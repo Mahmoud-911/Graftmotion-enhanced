@@ -4,23 +4,17 @@ import type { UploadApiResponse } from "cloudinary";
 
 export const runtime = "nodejs";
 
+// Netlify serverless max: allow up to 60 s for large video uploads
+export const maxDuration = 60;
+
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-const ALLOWED_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "image/avif",
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-  "video/x-msvideo",
-]);
+const MAX_BYTES = 100 * 1024 * 1024; // 100 MB
+const ALLOWED_TYPES = new Set(["video/mp4", "video/webm"]);
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,44 +27,50 @@ export async function POST(request: NextRequest) {
 
     if (!ALLOWED_TYPES.has(file.type)) {
       return NextResponse.json(
-        { error: `File type "${file.type}" is not allowed` },
+        { error: `Unsupported type "${file.type}". Only mp4 and webm are allowed.` },
         { status: 400 }
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    if (file.size > MAX_BYTES) {
+      return NextResponse.json(
+        { error: `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max is 100 MB.` },
+        { status: 413 }
+      );
+    }
 
-    const resourceType: "image" | "video" = file.type.startsWith("video/")
-      ? "video"
-      : "image";
+    // Read once into a Uint8Array — no Buffer conversion overhead
+    const bytes = new Uint8Array(await file.arrayBuffer());
 
     const result = await new Promise<UploadApiResponse>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: "graftmotion", resource_type: resourceType },
+        {
+          resource_type: "video",
+          folder: "graftmotion",
+          chunk_size: 6 * 1024 * 1024, // 6 MB chunks — stable for serverless
+          timeout: 120000,              // 120 s Cloudinary-side timeout
+        },
         (error, uploadResult) => {
-          if (error || !uploadResult) return reject(error ?? new Error("No result"));
+          if (error || !uploadResult) {
+            return reject(error ?? new Error("Cloudinary returned no result"));
+          }
           resolve(uploadResult);
         }
       );
-      stream.end(buffer);
+      stream.end(bytes);
     });
 
-    // Return `url` for backward-compat with the admin panel,
-    // plus the full Cloudinary response for callers that need it.
     return NextResponse.json({
-      url: result.secure_url,
       secure_url: result.secure_url,
+      url: result.secure_url, // backward-compat with admin panel
       public_id: result.public_id,
-      resource_type: result.resource_type,
-      format: result.format,
-      bytes: result.bytes,
-      width: result.width,
-      height: result.height,
       duration: result.duration ?? null,
     });
   } catch (err) {
-    console.error("Upload failed:", err);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    console.error("UPLOAD ERROR:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Upload failed" },
+      { status: 500 }
+    );
   }
 }
