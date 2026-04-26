@@ -69,6 +69,15 @@ export async function POST(req: Request) {
       },
     }
 
+    // Normalise featuredWork: accept array or slot-keyed object
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const normalizeFeatured = (fw: any) => {
+      if (!fw) return [];
+      if (Array.isArray(fw)) return fw;
+      return [fw.slot1 || {}, fw.slot2 || {}, fw.slot3 || {}, fw.slot4 || {}];
+    };
+    merged.featuredWork = normalizeFeatured(merged.featuredWork);
+
     // 3. Save merged result
     const { error } = await supabase
       .from('content')

@@ -238,8 +238,8 @@ export default async function HomePage() {
           My <span className="text-accent-glow">Work</span>
         </p>
         <div className="grid grid-cols-2 gap-4 md:gap-6">
-          {featuredWork.slice(0, 4).map((item) => (
-            <WorkItem key={item.id} item={item} />
+          {featuredWork.slice(0, 4).map((item, i) => (
+            <WorkItem key={item?.id || i} item={item} />
           ))}
         </div>
         <div className="mt-10 text-center">
@@ -344,8 +344,8 @@ export default async function HomePage() {
           See More <span className="text-accent-glow">Work</span>
         </p>
           <div className="grid grid-cols-3 gap-3 md:gap-4">
-            {moreWork.map((item) => (
-              <WorkItem key={item.id} item={item} small />
+            {moreWork.map((item, i) => (
+              <WorkItem key={item?.id || i} item={item} small />
             ))}
           </div>
         </section>
