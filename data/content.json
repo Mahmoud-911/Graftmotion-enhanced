@@ -1,0 +1,120 @@
+{
+  "site": {
+    "title": "GRAFTMOTION",
+    "subtitle": "Reliable Direction-aligned Videos. Guaranteed.",
+    "email": "graftmotionfx@gmail.com",
+    "ctaText": "Work With ME",
+    "ctaUrl": "https://www.instagram.com/graftmotion.vfx/"
+  },
+  "hero": {
+    "videoUrl": "/uploads/1777171370802-new-project-107-9ab761c-.mp4"
+  },
+  "clients": [
+    {
+      "id": "c1",
+      "name": "Bokeh labs",
+      "logo": "/uploads/1777172035073-534761039_17981812559892654_5571931560110145398_n.jpg"
+    },
+    {
+      "id": "c2",
+      "name": "Movo Gym Tracker",
+      "logo": "/uploads/1777172832176-e16af657-99bd-4040-a713-00832894e2c7.png"
+    },
+    {
+      "id": "26e092b3-e2c6-4154-8398-04a7edfa2832",
+      "name": "Spotup",
+      "logo": "/uploads/1777209860950-whatsapp-image-2026-03-15-at-23.41.42.jpeg"
+    },
+    {
+      "id": "18b2c332-d11a-40ba-94b3-325901b45aa9",
+      "name": "High End Dubai",
+      "logo": "/uploads/1777210046939-screenshot-2026-04-26-142649.png"
+    }
+  ],
+  "featuredWork": [
+    {
+      "id": "fw1",
+      "title": "Spotup Ad",
+      "thumbnail": "/uploads/1777209727051-screenshot-2026-04-26-142142.png",
+      "videoUrl": "/uploads/1777209663284-spotup-linked_1.mp4"
+    },
+    {
+      "id": "fw2",
+      "title": "Carloop",
+      "thumbnail": "/uploads/1777210160144-screenshot-2026-04-26-142906.png",
+      "videoUrl": "/uploads/1777210152863-carloop-sfx.mp4"
+    },
+    {
+      "id": "fw3",
+      "title": "Ui Animation",
+      "thumbnail": "/uploads/1777210315645-screenshot-2026-04-26-143139.png",
+      "videoUrl": "/uploads/1777210305462-ui-animation-sfx.mp4"
+    },
+    {
+      "id": "fw4",
+      "title": "Discord Promo",
+      "thumbnail": "/uploads/1777210721960-screenshot-2026-04-26-143826.png",
+      "videoUrl": "/uploads/1777210709774-discord-promo.mp4"
+    }
+  ],
+  "testimonials": {
+    "featuredImage": "/uploads/1777175042840-testomonials.jpg",
+    "items": []
+  },
+  "moreWork": [
+    {
+      "id": "mw1",
+      "title": "Work 1",
+      "thumbnail": "",
+      "videoUrl": ""
+    },
+    {
+      "id": "mw2",
+      "title": "Work 2",
+      "thumbnail": "",
+      "videoUrl": ""
+    },
+    {
+      "id": "mw3",
+      "title": "Work 3",
+      "thumbnail": "",
+      "videoUrl": ""
+    },
+    {
+      "id": "mw4",
+      "title": "Work 4",
+      "thumbnail": "",
+      "videoUrl": ""
+    },
+    {
+      "id": "mw5",
+      "title": "Work 5",
+      "thumbnail": "",
+      "videoUrl": ""
+    },
+    {
+      "id": "mw6",
+      "title": "Work 6",
+      "thumbnail": "",
+      "videoUrl": ""
+    },
+    {
+      "id": "mw7",
+      "title": "Work 7",
+      "thumbnail": "",
+      "videoUrl": ""
+    },
+    {
+      "id": "mw8",
+      "title": "Work 8",
+      "thumbnail": "",
+      "videoUrl": ""
+    },
+    {
+      "id": "mw9",
+      "title": "Work 9",
+      "thumbnail": "",
+      "videoUrl": ""
+    }
+  ]
+}
