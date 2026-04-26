@@ -40,53 +40,42 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const incoming = await req.json()
+    const body = await req.json()
 
-    const defaultContent = {
-      site: {
-        title: 'GRAFTMOTION',
-        subtitle: 'Reliable direction-aligned videos. Guaranteed.',
-        email: 'graftmotionfx@gmail.com',
-        ctaText: 'Work With Me',
-        ctaUrl: 'https://www.instagram.com/graftmotion.vfx/'
-      },
+    // 1. Get existing content so we can merge, not overwrite
+    const { data: existing } = await supabase
+      .from('content')
+      .select('data')
+      .eq('id', 'main')
+      .single()
+
+    const existingData = existing?.data || {}
+
+    // 2. Deep merge — top-level spread, with nested objects preserved
+    const merged = {
+      ...existingData,
+      ...body,
       hero: {
-        videoUrl: incoming?.hero?.videoUrl || ''
+        ...existingData.hero,
+        ...body.hero,
       },
-      clients: [
-        { name: 'Bokeh Labs',       logo: '' },
-        { name: 'Movo Gym Tracker', logo: '' },
-        { name: 'Spotup',           logo: '' },
-        { name: 'High End Dubai',   logo: '' }
-      ],
-      featuredWork: [
-        { title: 'Spotup Ad',     videoUrl: '' },
-        { title: 'Carloop',       videoUrl: '' },
-        { title: 'UI Animation',  videoUrl: '' },
-        { title: 'Discord Promo', videoUrl: '' }
-      ],
       testimonials: {
-        featuredImage: '',
-        items: [
-          { quote: 'Great work!',    image: '' },
-          { quote: 'Amazing edits!', image: '' }
-        ]
+        ...existingData.testimonials,
+        ...body.testimonials,
+        items:
+          body.testimonials?.items ||
+          existingData.testimonials?.items ||
+          [],
       },
-      moreWork: [
-        { title: 'Project 1', videoUrl: '' },
-        { title: 'Project 2', videoUrl: '' },
-        { title: 'Project 3', videoUrl: '' }
-      ]
     }
 
-    const body = { ...defaultContent, ...incoming }
-
+    // 3. Save merged result
     const { error } = await supabase
       .from('content')
-      .upsert({ id: 'main', data: body })
+      .upsert({ id: 'main', data: merged })
 
     if (error) {
-      return Response.json({ error: 'Failed to save' }, { status: 500 })
+      return Response.json({ error: 'Save failed' }, { status: 500 })
     }
 
     return Response.json({ success: true })
