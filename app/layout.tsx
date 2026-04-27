@@ -6,7 +6,17 @@ import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "GRAFTMOTION — Video Portfolio",
-  description: "Reliable Direction-aligned Videos. Guaranteed."
+  description: "Reliable Direction-aligned Videos. Guaranteed.",
+  // app/icon.png, app/apple-icon.png and app/favicon.ico are auto-detected
+  // by Next.js App Router — no explicit icons config needed for those.
+  // Extra sizes served from /public for Android / PWA manifests:
+  icons: {
+    icon: [
+      { url: "/icon-32.png",  sizes: "32x32",  type: "image/png" },
+      { url: "/icon-16.png",  sizes: "16x16",  type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({
