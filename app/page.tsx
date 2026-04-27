@@ -137,8 +137,11 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
       {/* ── HERO ──────────────────────────────────────────── */}
-      <div className="relative overflow-hidden" style={{ minHeight: "100vh" }}>
-        <FloatingIcons />
+      <div className="relative overflow-hidden md:min-h-screen">
+        {/* Icons hidden on mobile — they cause empty space with absolute positioning */}
+        <div className="hidden md:block">
+          <FloatingIcons />
+        </div>
       <section className="relative z-10 mx-auto max-w-5xl px-6 pb-12 pt-28 text-center">
         <h1
           className="font-display text-7xl md:text-9xl"
