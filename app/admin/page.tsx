@@ -1059,9 +1059,9 @@ export default function AdminPage() {
           borderBottom: "1px solid var(--border)"
         }}
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <span className="font-display text-3xl" style={{ color: "var(--accent)" }}>
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6 md:py-4">
+          <div className="flex items-center gap-2">
+            <span className="font-display text-2xl md:text-3xl" style={{ color: "var(--accent)" }}>
               GM
             </span>
             <span
@@ -1071,30 +1071,54 @@ export default function AdminPage() {
               Admin Panel
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <a
               href="/"
               target="_blank"
               rel="noreferrer"
-              className="rounded-full px-4 py-2 text-xs font-semibold transition-opacity hover:opacity-80"
+              className="rounded-full px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-80 md:px-4 md:py-2"
               style={{ background: "var(--surface-2)", color: "var(--text)", border: "1px solid var(--border)" }}
             >
-              View Site ↗
+              <span className="hidden sm:inline">View Site</span>
+              <span className="sm:hidden">↗</span>
             </a>
             <button
               onClick={save}
               disabled={saving}
-              className="rounded-full px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="rounded-full px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 md:px-5 md:py-2 md:text-sm"
               style={{ background: "linear-gradient(135deg,#FF6600,#FF8800)" }}
             >
-              {saving ? "Saving…" : "Save All Changes"}
+              {saving ? "Saving…" : <><span className="hidden sm:inline">Save All Changes</span><span className="sm:hidden">Save</span></>}
             </button>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto flex max-w-7xl gap-8 px-6 py-8">
-        {/* Sidebar nav */}
+      {/* Mobile tab bar — full width above content */}
+      <div className="sticky top-[57px] z-40 md:hidden" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)" }}>
+        <div
+          className="flex gap-2 overflow-x-auto px-4 py-2"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-all"
+              style={{
+                background: activeTab === tab.id ? "linear-gradient(135deg,#FF6600,#FF8800)" : "var(--surface)",
+                color: activeTab === tab.id ? "#fff" : "var(--text-muted)",
+                border: "1px solid var(--border)"
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mx-auto flex max-w-7xl gap-8 px-4 py-6 md:px-6 md:py-8">
+        {/* Sidebar nav — desktop only */}
         <aside className="hidden w-48 shrink-0 md:block">
           <nav className="space-y-1">
             {TABS.map((tab) => (
@@ -1103,10 +1127,8 @@ export default function AdminPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className="w-full rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-all"
                 style={{
-                  background:
-                    activeTab === tab.id ? "var(--accent)" : "transparent",
-                  color:
-                    activeTab === tab.id ? "#fff" : "var(--text-muted)"
+                  background: activeTab === tab.id ? "var(--accent)" : "transparent",
+                  color: activeTab === tab.id ? "#fff" : "var(--text-muted)"
                 }}
               >
                 {tab.label}
@@ -1114,32 +1136,6 @@ export default function AdminPage() {
             ))}
           </nav>
         </aside>
-
-        {/* Mobile tab bar */}
-        <div className="mb-6 md:hidden">
-          <div
-            className="flex gap-2 overflow-x-auto pb-2"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-all"
-                style={{
-                  background:
-                    activeTab === tab.id
-                      ? "linear-gradient(135deg,#FF6600,#FF8800)"
-                      : "var(--surface)",
-                  color: activeTab === tab.id ? "#fff" : "var(--text-muted)",
-                  border: "1px solid var(--border)"
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Content area */}
         <main className="min-w-0 flex-1">
