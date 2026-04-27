@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import GradientBackground from "@/components/GradientBackground";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "GRAFTMOTION — Video Portfolio",
@@ -37,6 +38,7 @@ export default function RootLayout({
         <GradientBackground />
         <Navbar />
         {children}
+        <Analytics />
       </body>
     </html>
   );
