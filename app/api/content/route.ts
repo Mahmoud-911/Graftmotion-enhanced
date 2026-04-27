@@ -3,9 +3,24 @@ export const runtime = "nodejs";
 
 import { readFile } from "fs/promises";
 import path from "path";
+import { initializeApp, getApps } from "firebase/app";
+import { getFirestore, doc, setDoc } from "firebase/firestore/lite";
 
 const CONTENT_PATH = path.join(process.cwd(), "data", "content.json");
 const NO_CACHE = { headers: { "Cache-Control": "no-store" } };
+
+// Initialise once per cold start — getApps() prevents duplicate-app errors
+function getDb() {
+  const app =
+    getApps().length === 0
+      ? initializeApp({
+          apiKey:     process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+          authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+          projectId:  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        })
+      : getApps()[0];
+  return getFirestore(app);
+}
 
 async function fetchFromFirestore() {
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
@@ -41,10 +56,23 @@ export async function GET() {
   }
 }
 
-// Admin saves directly to Firestore — this endpoint no longer accepts POSTs.
-export async function POST() {
-  return Response.json(
-    { error: "Content is now saved directly to Firestore from the admin panel." },
-    { status: 410 }
-  );
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+
+    const db = getDb();
+
+    await setDoc(doc(db, "content", "main"), {
+      json:      JSON.stringify(body),
+      updatedAt: new Date().toISOString(),
+    });
+
+    return Response.json({ success: true });
+  } catch (err) {
+    console.error("Firestore POST error:", err);
+    return Response.json(
+      { error: err instanceof Error ? err.message : "Failed to save content" },
+      { status: 500 }
+    );
+  }
 }
