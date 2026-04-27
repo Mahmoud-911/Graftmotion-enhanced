@@ -137,9 +137,8 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
       {/* ── HERO ──────────────────────────────────────────── */}
-      <div className="relative overflow-hidden" style={{ minHeight: "100vh" }}>
-        <FloatingIcons />
-      <section className="relative z-10 mx-auto max-w-5xl px-6 pb-12 pt-28 text-center">
+      <div className="relative">
+      <section className="relative z-10 mx-auto max-w-5xl px-6 pb-8 pt-28 text-center">
         <h1
           className="font-display text-7xl md:text-9xl"
           style={{ color: "var(--text)", letterSpacing: "0.06em" }}
@@ -188,6 +187,9 @@ export default async function HomePage() {
           </a>
         </div>
       </section>
+
+      {/* ── Floating icons grid — below hero on mobile ─────── */}
+      <FloatingIcons />
       </div>{/* end hero wrapper */}
 
       {/* ── CLIENTS ───────────────────────────────────────── */}
