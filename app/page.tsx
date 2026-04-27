@@ -74,8 +74,27 @@ const FALLBACK: SiteContent = {
   moreWork: []
 };
 
+async function fetchFromFirestore() {
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  if (!projectId) throw new Error("NEXT_PUBLIC_FIREBASE_PROJECT_ID not set");
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/content/main`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Firestore REST ${res.status}`);
+  const firestoreDoc = await res.json();
+  const jsonStr = firestoreDoc?.fields?.json?.stringValue;
+  if (!jsonStr) throw new Error("No content in Firestore");
+  return JSON.parse(jsonStr);
+}
+
 async function getContent(): Promise<SiteContent> {
-  // 1. Read from content.json (source of truth)
+  // 1. Try Firestore (live data saved by admin)
+  try {
+    return shapeContent(await fetchFromFirestore());
+  } catch (err) {
+    console.error("Firestore fetch error:", err);
+  }
+
+  // 2. Fallback — content.json bundled with the deployment
   try {
     const raw = await readFile(
       path.join(process.cwd(), "data", "content.json"),
@@ -86,7 +105,7 @@ async function getContent(): Promise<SiteContent> {
     // fall through
   }
 
-  // 2. Last resort hardcoded defaults
+  // 3. Last resort hardcoded defaults
   return FALLBACK;
 }
 

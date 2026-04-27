@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc *)",
-      "Bash(node -e \"require\\('@supabase/supabase-js'\\); require\\('cloudinary'\\); console.log\\('both ok'\\)\")"
+      "Bash(node -e \"require\\('@supabase/supabase-js'\\); require\\('cloudinary'\\); console.log\\('both ok'\\)\")",
+      "Bash(npm install *)"
     ]
   }
 }

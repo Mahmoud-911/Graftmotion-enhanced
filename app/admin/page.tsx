@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 /* ── Types ──────────────────────────────────────────────── */
 type Client = { id: string; name: string; logo: string };
@@ -921,10 +923,11 @@ export default function AdminPage() {
   const loadContent = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/content");
-      const raw = await res.json();
+      const snap = await getDoc(doc(db, "content", "main"));
+      const raw = snap.exists() ? JSON.parse(snap.data()?.json || "{}") : {};
       setContent(normalizeAdminContent(raw));
-    } catch {
+    } catch (err) {
+      console.error("Failed to load content:", err);
       showToast("Failed to load content", false);
     } finally {
       setLoading(false);
@@ -935,14 +938,13 @@ export default function AdminPage() {
     if (!content) return;
     setSaving(true);
     try {
-      const res = await fetch("/api/content", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(content)
+      await setDoc(doc(db, "content", "main"), {
+        json: JSON.stringify(content),
+        updatedAt: new Date().toISOString(),
       });
-      if (!res.ok) throw new Error();
       showToast("Changes saved!");
-    } catch {
+    } catch (err) {
+      console.error("Save error:", err);
       showToast("Save failed — try again", false);
     } finally {
       setSaving(false);
