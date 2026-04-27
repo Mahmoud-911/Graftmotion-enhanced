@@ -135,20 +135,20 @@ export default async function HomePage() {
   const motionWord = site?.title?.includes("MOTION") ? "MOTION" : "";
 
   return (
-    <div className="min-h-screen">
+    <div>
       {/* ── HERO ──────────────────────────────────────────── */}
-      <div className="relative">
-      <section className="relative z-10 mx-auto max-w-5xl px-6 pb-8 pt-28 text-center">
+      <section className="mx-auto flex max-w-5xl flex-col items-center px-4 pb-8 pt-20 text-center sm:px-6 sm:pt-28">
         <h1
-          className="font-display text-7xl md:text-9xl"
+          className="font-display text-5xl leading-tight sm:text-7xl md:text-9xl"
           style={{ color: "var(--text)", letterSpacing: "0.06em" }}
         >
           {motionWord
             ? <Accent text={site?.title || ""} word={motionWord} />
             : site?.title || ""}
         </h1>
+
         <p
-          className="mx-auto mt-3 max-w-lg text-base font-semibold md:text-lg"
+          className="mt-3 max-w-lg text-sm font-semibold sm:text-base md:text-lg"
           style={{ color: "var(--text-muted)" }}
         >
           <Accent text={site?.subtitle || ""} word="Guaranteed" />
@@ -156,7 +156,7 @@ export default async function HomePage() {
 
         {/* Showreel */}
         <div
-          className="relative mt-8 w-full overflow-hidden rounded-2xl"
+          className="relative mt-6 w-full overflow-hidden rounded-2xl md:mt-10"
           style={{
             aspectRatio: "16/9",
             background: "var(--surface)",
@@ -181,16 +181,15 @@ export default async function HomePage() {
           )}
         </div>
 
-        <div className="mt-8">
-          <a href={site?.ctaUrl || ""} target="_blank" rel="noreferrer" className="btn-primary text-base">
+        <div className="mt-6 md:mt-8">
+          <a href={site?.ctaUrl || ""} target="_blank" rel="noreferrer" className="btn-primary text-sm sm:text-base">
             {site?.ctaText || ""}
           </a>
         </div>
       </section>
 
-      {/* ── Floating icons grid — below hero on mobile ─────── */}
+      {/* ── Floating icons grid ────────────────────────────── */}
       <FloatingIcons />
-      </div>{/* end hero wrapper */}
 
       {/* ── CLIENTS ───────────────────────────────────────── */}
       {clients.length > 0 && (
